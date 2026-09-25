@@ -1,0 +1,6 @@
+{
+  "name": "Blank Page",
+  "description": "Media dashboard featuring Entertainment, Replay, Coding, and News with Firestore persistence for Videos, Showbiz News, Photos, Polls, and Quizzes, rich document formatting, and media embeds.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

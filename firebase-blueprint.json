@@ -1,0 +1,170 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile document",
+      "type": "object",
+      "properties": {
+        "fullName": { "type": "string", "description": "User full name" },
+        "username": { "type": "string", "description": "Unique username" },
+        "email": { "type": "string", "format": "email", "description": "User email address" },
+        "quota": { "type": "number", "description": "User storage or upload quota" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["fullName", "username", "email"]
+    },
+    "VideoItem": {
+      "title": "VideoItem",
+      "description": "Video content item",
+      "type": "object",
+      "properties": {
+        "videoUrl": { "type": "string", "description": "URL of the video or embed" },
+        "title": { "type": "string", "description": "Video title" },
+        "document": { "type": "string", "description": "Rich text document or notes" },
+        "section": { "type": "string", "description": "Dashboard section category" },
+        "likesCount": { "type": "number", "description": "Total count of likes" },
+        "likedUsers": { "type": "object", "description": "Map of user UIDs to boolean" },
+        "reactions": { "type": "object", "description": "Map of user UIDs to emoji reaction" },
+        "reactionCounts": { "type": "object", "description": "Map of emoji reactions to count" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["videoUrl", "title"]
+    },
+    "NewsItem": {
+      "title": "NewsItem",
+      "description": "Showbiz news content item",
+      "type": "object",
+      "properties": {
+        "coverPhoto": { "type": "string", "description": "Cover photo URL or data" },
+        "title": { "type": "string", "description": "News article title" },
+        "document": { "type": "string", "description": "Rich text content" },
+        "section": { "type": "string", "description": "Dashboard section category" },
+        "likesCount": { "type": "number", "description": "Total count of likes" },
+        "likedUsers": { "type": "object", "description": "Map of user UIDs to boolean" },
+        "reactions": { "type": "object", "description": "Map of user UIDs to emoji reaction" },
+        "reactionCounts": { "type": "object", "description": "Map of emoji reactions to count" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title"]
+    },
+    "PhotoItem": {
+      "title": "PhotoItem",
+      "description": "Photo collection item",
+      "type": "object",
+      "properties": {
+        "coverPhoto": { "type": "string", "description": "Album cover photo" },
+        "title": { "type": "string", "description": "Photo gallery title" },
+        "document": { "type": "string", "description": "Description or rich text" },
+        "otherPhoto": { "type": "array", "description": "Array of additional photo items with badges and descriptions" },
+        "section": { "type": "string", "description": "Dashboard section category" },
+        "likesCount": { "type": "number", "description": "Total count of likes" },
+        "likedUsers": { "type": "object", "description": "Map of user UIDs to boolean" },
+        "reactions": { "type": "object", "description": "Map of user UIDs to emoji reaction" },
+        "reactionCounts": { "type": "object", "description": "Map of emoji reactions to count" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title"]
+    },
+    "PollItem": {
+      "title": "PollItem",
+      "description": "Interactive poll item",
+      "type": "object",
+      "properties": {
+        "coverPhoto": { "type": "string", "description": "Cover image" },
+        "title": { "type": "string", "description": "Poll title" },
+        "document": { "type": "string", "description": "Poll description" },
+        "poll": { "type": "object", "description": "Poll question, options, and vote counts" },
+        "section": { "type": "string", "description": "Dashboard section category" },
+        "likesCount": { "type": "number", "description": "Total count of likes" },
+        "likedUsers": { "type": "object", "description": "Map of user UIDs to boolean" },
+        "reactions": { "type": "object", "description": "Map of user UIDs to emoji reaction" },
+        "reactionCounts": { "type": "object", "description": "Map of emoji reactions to count" },
+        "votedUsers": { "type": "object", "description": "Map of user UIDs to option ID voted" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title"]
+    },
+    "QuizItem": {
+      "title": "QuizItem",
+      "description": "Interactive quiz item",
+      "type": "object",
+      "properties": {
+        "coverPhoto": { "type": "string", "description": "Cover image" },
+        "title": { "type": "string", "description": "Quiz title" },
+        "document": { "type": "string", "description": "Quiz instructions or description" },
+        "quiz": { "type": "object", "description": "Questions and answer options" },
+        "section": { "type": "string", "description": "Dashboard section category" },
+        "likesCount": { "type": "number", "description": "Total count of likes" },
+        "likedUsers": { "type": "object", "description": "Map of user UIDs to boolean" },
+        "reactions": { "type": "object", "description": "Map of user UIDs to emoji reaction" },
+        "reactionCounts": { "type": "object", "description": "Map of emoji reactions to count" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title"]
+    },
+    "ProductItem": {
+      "title": "ProductItem",
+      "description": "Shopping product and merchandise catalog item",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Product title" },
+        "price": { "type": "number", "description": "Product price in currency" },
+        "document": { "type": "string", "description": "Product description or specs" },
+        "coverPhoto": { "type": "string", "description": "Cover or main photo URL" },
+        "otherPhoto": { "type": "array", "description": "Additional gallery photos" },
+        "tags": { "type": "array", "description": "Product tags or category keywords" },
+        "visibility": { "type": "string", "description": "Visibility status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title"]
+    },
+    "OrderItem": {
+      "title": "OrderItem",
+      "description": "Shopping purchase order record",
+      "type": "object",
+      "properties": {
+        "orderNumber": { "type": "string", "description": "Human readable order identifier" },
+        "items": { "type": "array", "description": "Items ordered with quantities and unit prices" },
+        "totalAmount": { "type": "number", "description": "Order total price" },
+        "paymentMethod": { "type": "string", "description": "Payment method used" },
+        "status": { "type": "string", "description": "Order status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["orderNumber", "totalAmount"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document"
+    },
+    "/users/{userId}/videos/{videoId}": {
+      "schema": "VideoItem",
+      "description": "User created video items"
+    },
+    "/users/{userId}/showbizNews/{newsId}": {
+      "schema": "NewsItem",
+      "description": "User created showbiz news items"
+    },
+    "/users/{userId}/photos/{photoId}": {
+      "schema": "PhotoItem",
+      "description": "User created photo galleries"
+    },
+    "/users/{userId}/polls/{pollId}": {
+      "schema": "PollItem",
+      "description": "User created polls"
+    },
+    "/users/{userId}/quiz/{quizId}": {
+      "schema": "QuizItem",
+      "description": "User created quizzes"
+    },
+    "/users/{userId}/products/{productId}": {
+      "schema": "ProductItem",
+      "description": "User created shopping products"
+    },
+    "/users/{userId}/orders/{orderId}": {
+      "schema": "OrderItem",
+      "description": "User shopping orders and purchase receipts"
+    }
+  }
+}
