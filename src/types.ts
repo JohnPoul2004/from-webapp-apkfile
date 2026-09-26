@@ -46,6 +46,7 @@ export type DashboardSection =
   | 'Community Standards'
   | 'TV Schedule'
   | 'Weather'
+  | 'Catch Now'
   | 'Terms of Service'
   | 'Privacy Policy';
 export type SubTab = 'Videos' | 'Showbiz News' | 'Photos' | 'Polls' | 'Quizzes' | 'Shorts' | 'Products' | 'Shopping';
@@ -315,4 +316,36 @@ export interface QuotaTierConfig {
   priceLifetime?: string;
   description: string;
   isPopular?: boolean;
+}
+
+export interface CatchNowOption {
+  id?: string;
+  optionNumber: number | string;
+  title: string;
+  description: string;
+  gongManEnabled?: boolean;
+}
+
+export interface CatchNowItem {
+  id?: string;
+  userId?: string;
+  authorName?: string;
+  authorEmail?: string;
+  title: string;
+  story: string;
+  date: string;
+  time?: string;
+  category?: string;
+  coverPhoto?: string;
+  options?: CatchNowOption[];
+  // Legacy single option support fallback
+  optionNumber?: number | string;
+  optionTitle?: string;
+  optionDescription?: string;
+  likes?: number;
+  tags?: string[];
+  createdAt?: any;
+  updatedAt?: any;
+  isDeleted?: boolean;
+  deletedAt?: any;
 }

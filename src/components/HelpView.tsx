@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   HelpCircle,
   Video,
@@ -19,11 +19,32 @@ import {
   Sliders,
   Compass,
   AlertOctagon,
+  AlertTriangle,
   Code2,
   FileCode,
-  FileText
+  FileText,
+  Info,
+  ArrowUpRight,
+  Copy,
+  Check,
+  Hash,
+  ExternalLink,
+  Terminal,
+  Github,
+  GitBranch,
+  Wrench,
+  RefreshCw,
+  Cpu,
+  MessageSquareCode,
+  Sparkles
 } from 'lucide-react';
 import { ViewCodeModal, CodeLanguage, FeatureScope } from './ViewCodeModal';
+import {
+  ALL_HTTP_STATUS_CODES,
+  HttpStatusCodeItem,
+  HttpStatusClass
+} from '../data/httpStatusCodes';
+import { SoloParentIcon, ParentsIcon } from './ErrorIcons';
 
 interface HelpViewProps {
   onStartTour?: () => void;
@@ -41,7 +62,8 @@ export type HelpCategory =
   | 'Delete'
   | 'Quota'
   | 'Upgrade'
-  | 'Errors';
+  | 'Errors'
+  | 'Issues';
 
 export interface HelpTopic {
   id: string;
@@ -440,35 +462,113 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     id: 'errors-help',
     category: 'Errors',
-    title: 'HTTP Status Code & Error Pages Directory',
-    badge: 'Error Pages',
+    title: 'HTTP Status Codes & Error Directory (1xx, 2xx, 3xx, 4xx, 5xx)',
+    badge: 'Status Codes (1xx–5xx)',
     icon: AlertOctagon,
     targetSection: 'Errors',
     description:
-      'Explore standard HTTP 4xx Client Errors badged with the Solo Parent Icon, and 5xx Server Errors badged with the Parents Icon.',
+      'Complete RFC reference directory for HTTP status codes across all five standard classes: 1xx Informational, 2xx Success, 3xx Redirection, 4xx Client Errors (Solo Parent Icon), and 5xx Server Errors (Parents Icon).',
     steps: [
-      'Click "Errors" in the sidebar to open the full HTTP error pages directory.',
-      'Filter between All (40 codes), 4xx Client Errors (29 codes), or 5xx Server Errors (11 codes).',
-      'Click "View Error Page" on any error card to launch the live full-screen error simulation page.',
-      'Copy standard status code definitions or view in-depth RFC technical specifications and troubleshooting tips.'
+      'Navigate to "Errors Help" in the Help Center to access the interactive 1xx, 2xx, 3xx, 4xx, and 5xx Status Code directory.',
+      'Filter by category pills: "1xx Informational (4)", "2xx Success (10)", "3xx Redirection (8)", "4xx Client Errors (29)", or "5xx Server Errors (11)".',
+      'Use the live search bar to quickly locate any status code by number (e.g., 200, 301, 404, 500) or by descriptive name.',
+      'Review RFC technical specifications, status code meanings, and family icon badges (Solo Parent Icon for 4xx, Parents Icon for 5xx).',
+      'Click the "Copy" button on any status code card to quickly copy code numbers and standard names for API documentation and debugging.',
+      'Click "View Error Page" in the Errors section to launch live full-screen error simulations with custom headers.'
     ],
     tips: [
-      '4xx client errors (400 to 451) are paired with the Solo Parent Icon.',
-      '5xx server errors (500 to 511) are paired with the Parents Icon.',
-      'All error codes include actionable troubleshooting checklists and RFC standard references.'
+      '1xx Informational (100–103): Provisional responses indicating request receipt; client continues sending data.',
+      '2xx Success (200–226): Confirms request was received, understood, and successfully processed by the server.',
+      '3xx Redirection (300–308): Further action required; client must follow new URI location headers to complete request.',
+      '4xx Client Error (400–451): Client-side faults (bad syntax, missing auth, not found) badged with the Solo Parent Icon.',
+      '5xx Server Error (500–511): Origin server failures (internal crash, gateway timeouts) badged with the Parents Icon.',
+      'Use 301 for permanent URL changes to preserve SEO ranking, and 302/307 for temporary URL diversions.'
     ],
     faqs: [
       {
+        q: 'What are the 5 standard classes of HTTP status codes (1xx, 2xx, 3xx, 4xx, 5xx)?',
+        a: 'HTTP response status codes are grouped into five standard classes: 1xx Informational (request received, continuing process), 2xx Success (action successfully received and accepted), 3xx Redirection (further action must be taken to complete request), 4xx Client Error (request contains bad syntax or cannot be fulfilled), and 5xx Server Error (server failed to fulfill an apparently valid request).'
+      },
+      {
+        q: 'What status codes are in the 1xx Informational class?',
+        a: 'The 1xx class includes 100 Continue (proceed with body), 101 Switching Protocols (e.g. HTTP to WebSocket), 102 Processing (WebDAV in-flight), and 103 Early Hints (preloading critical link headers before final response).'
+      },
+      {
+        q: 'What status codes are in the 2xx Success class?',
+        a: 'The 2xx class includes 200 OK (standard success), 201 Created (new resource created), 202 Accepted (queued for asynchronous processing), 203 Non-Authoritative Information, 204 No Content, 205 Reset Content, 206 Partial Content, 207 Multi-Status (WebDAV), 208 Already Reported (WebDAV), and 226 IM Used.'
+      },
+      {
+        q: 'What status codes are in the 3xx Redirection class?',
+        a: 'The 3xx class includes 300 Multiple Choices, 301 Moved Permanently (permanent redirect), 302 Found (temporary redirect), 303 See Other (redirect to GET), 304 Not Modified (cached copy valid), 305 Use Proxy, 307 Temporary Redirect (preserves HTTP method), and 308 Permanent Redirect (preserves HTTP method).'
+      },
+      {
         q: 'Which error codes have the Solo Parent Icon?',
-        a: 'All 29 standard 4xx Client Error codes: 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 421, 422, 423, 424, 425, 426, 428, 429, 431, and 451.'
+        a: 'All 29 standard 4xx Client Error codes are badged with the Solo Parent Icon: 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 421, 422, 423, 424, 425, 426, 428, 429, 431, and 451.'
       },
       {
         q: 'Which error codes have the Parents Icon?',
-        a: 'All 11 standard 5xx Server Error codes: 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511.'
+        a: 'All 11 standard 5xx Server Error codes are badged with the Parents Icon: 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, and 511.'
       },
       {
         q: 'Can I preview what an error page looks like?',
-        a: 'Yes, clicking "View Error Page" renders the exact responsive error layout with custom headers, diagnostic recommendations, and return actions.'
+        a: 'Yes, clicking "View Error Page" in the Errors section renders the exact responsive error layout with custom headers, diagnostic recommendations, and return actions.'
+      }
+    ]
+  },
+  {
+    id: 'issues-help',
+    category: 'Issues',
+    title: 'How to Fix Process Completed with Exit Code 1 (GitHub & Google AI Studio)',
+    badge: 'GitHub & Google AI Studio Fix',
+    icon: AlertTriangle,
+    targetSection: 'Issues',
+    description:
+      'Complete developer guide for diagnosing and fixing "Process completed with exit code 1." across Google AI Studio build environments, GitHub Actions CI/CD workflows, and local TypeScript/npm runners—including Prompt Start and End text formatting.',
+    steps: [
+      'Locate the failing command in stderr: In Google AI Studio, look at the terminal output logs of "compile_applet" or "lint_applet". In GitHub Actions, expand the failed step in the Workflow Run Summary.',
+      'Diagnose the root cause: Check for TypeScript compiler errors (e.g. "error TS2304: Cannot find name \'Mail\' or \'Plus\'"), uninstalled npm packages, or missing environment variables.',
+      'Format bug-fix prompts with Prompt Start and End text: When asking an AI model or writing issue reports, encapsulate the error context between explicit boundary delimiters (e.g., <PROMPT_START> and <PROMPT_END> or --- BEGIN PROMPT --- and --- END PROMPT ---) to prevent prompt injection and truncation.',
+      'Fix in Google AI Studio: Add missing symbol imports to the top of your TSX/JSX file (e.g. import { Mail, Plus } from "lucide-react";), install missing dependencies with install_applet_package, and re-run "npm run lint".',
+      'Fix in GitHub Actions: Ensure node-version in .github/workflows/*.yml matches your runtime (Node 20.x), add missing repository secrets under Settings -> Secrets and variables -> Actions, and commit an updated package-lock.json so "npm ci" succeeds.',
+      'Verify clean exit code 0: Run "npm run lint && npm run build" locally or in AI Studio. When the command executes without assertion errors, check "echo $?" to confirm it returns 0 (Success).',
+      'Test live in View Code: Click "Inspect in View Code (Exit Code 1)" and toggle "Preview Code" to test the interactive terminal auto-fix simulation.'
+    ],
+    tips: [
+      'Exit Code 0 means Success (No Errors), while Exit Code 1 signals an unhandled POSIX fatal execution failure.',
+      'Always frame issue prompts with Prompt Start and End text (e.g., <PROMPT_START> ... <PROMPT_END>) to instruct models to only produce targeted code replacements without placeholders.',
+      'In GitHub Actions, CI=true turns linter warnings into blocking errors. Always run "npm run lint" before pushing commits.',
+      'Never commit package.json modifications without running "npm install" to synchronize package-lock.json, otherwise GitHub Actions "npm ci" will abort with exit code 1.',
+      'In Google AI Studio, use the 4th dropdown menu ("4. Issues") in View Code to inspect the full ProcessCompletedWithExitCode1.log diagnostic template.',
+      'For missing icons or UI helpers, inspect line and column numbers reported in the tsc error trace (e.g., ViewCodeModal.tsx:2428:20).'
+    ],
+    faqs: [
+      {
+        q: 'What is Prompt Start and End Text and why should I use it for Issues Help?',
+        a: 'Prompt Start and End Text are explicit boundary markers (such as <PROMPT_START> ... <PROMPT_END> or --- BEGIN PROMPT --- ... --- END PROMPT ---) that encapsulate user instructions, diagnostic logs, and error traces. They prevent prompt truncation, block prompt injection, and clearly instruct AI coding models where the issue context starts and where output constraints end.'
+      },
+      {
+        q: 'How do I fix "Process completed with exit code 1." in Google AI Studio?',
+        a: 'In Google AI Studio, this error typically occurs during compile_applet or lint_applet when tsc --noEmit detects TypeScript errors (such as error TS2304 for undeclared identifiers like Mail or Plus). To fix it: 1) Open the file referenced in the error log, 2) Add the missing imports at the top of the file, 3) If an external package is missing, install it with install_applet_package, 4) Re-run the applet build to verify that the exit code transitions from 1 to 0.'
+      },
+      {
+        q: 'How do I fix "Process completed with exit code 1." in GitHub Actions?',
+        a: 'In GitHub Actions, a step fails with exit code 1 if any script command in your workflow exits with non-zero status. Fix it by: 1) Clicking on the failed workflow run in the "Actions" tab and expanding the red step to see the exact error, 2) Ensuring your workflow uses the correct Node version (actions/setup-node@v4 with node-version: 20), 3) Making sure package-lock.json is committed and synced with package.json so "npm ci" does not fail, 4) Configuring missing secrets in GitHub Repository Settings -> Secrets and variables -> Actions.'
+      },
+      {
+        q: 'What are the recommended Prompt Start and End Text templates for debugging?',
+        a: 'Popular formats include: 1) XML tag format (<PROMPT_START> and <PROMPT_END>), 2) Markdown horizontal rules (--- BEGIN ISSUE FIX PROMPT --- and --- END ISSUE FIX PROMPT ---), and 3) Custom delimiters. You can generate, customize, and copy these directly using the "Prompt Start & End Text" tab in Issues Help.'
+      },
+      {
+        q: 'How do I resolve "error TS2304: Cannot find name \'Mail\' or \'Plus\'"?',
+        a: 'This error happens when JSX references component or icon identifiers without importing them. Resolve it by updating your import statement at line 1-50 of the component: import { Mail, Plus } from "lucide-react"; and then running npm run lint to confirm all references resolve cleanly.'
+      },
+      {
+        q: 'Why does a build succeed locally but fail with exit code 1 in GitHub Actions?',
+        a: 'GitHub Actions runners execute in a pristine environment with CI=true, strict case-sensitive file systems (Ubuntu Linux), and use "npm ci" instead of "npm install". Discrepancies usually come from: 1) File path capitalization differences (e.g. Component.tsx vs component.tsx), 2) Diverged package-lock.json, 3) Missing environment variables not defined in GitHub repository secrets, or 4) Linter warnings treated as errors in CI mode.'
+      },
+      {
+        q: 'How can I check the exit code in my terminal?',
+        a: 'In bash or zsh, run "echo $?" immediately after running a command. A return value of 0 means the command completed successfully. Any value of 1 or greater indicates a failure that will trigger "Process completed with exit code 1" in CI runners.'
       }
     ]
   }
@@ -490,6 +590,122 @@ export const HelpView: React.FC<HelpViewProps> = ({ onStartTour }) => {
     setViewCodeInitialFeature(feature);
     setIsViewCodeOpen(true);
   };
+
+  // State for 1xx, 2xx, 3xx, 4xx, 5xx Status Code Directory in Errors Help
+  const [httpStatusTab, setHttpStatusTab] = useState<'All' | HttpStatusClass>('All');
+  const [httpStatusQuery, setHttpStatusQuery] = useState('');
+  const [copiedStatusCode, setCopiedStatusCode] = useState<number | null>(null);
+
+  const handleCopyStatus = (code: number, name: string) => {
+    navigator.clipboard.writeText(`${code} ${name}`);
+    setCopiedStatusCode(code);
+    setTimeout(() => setCopiedStatusCode(null), 2000);
+  };
+
+  // State for GitHub & Google AI Studio Exit Code 1 Troubleshooter in Issues Help
+  const [issuesPlatformTab, setIssuesPlatformTab] = useState<'aistudio' | 'github' | 'prompt' | 'terminal'>('aistudio');
+  const [isSimulatedResolved, setIsSimulatedResolved] = useState(false);
+  const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
+
+  const handleCopyCommand = (cmd: string) => {
+    navigator.clipboard.writeText(cmd);
+    setCopiedCmd(cmd);
+    setTimeout(() => setCopiedCmd(null), 2000);
+  };
+
+  // State for Prompt Start and End Text in Issues Help
+  const [promptStyle, setPromptStyle] = useState<'tags' | 'markdown' | 'xml' | 'custom'>('tags');
+  const [customPromptStart, setCustomPromptStart] = useState('<PROMPT_START>');
+  const [customPromptEnd, setCustomPromptEnd] = useState('<PROMPT_END>');
+  const [promptIssueTarget, setPromptIssueTarget] = useState<'exitCode1' | 'missingImports' | 'githubCI'>('exitCode1');
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
+
+  const getPromptStartText = () => {
+    switch (promptStyle) {
+      case 'tags':
+        return '<PROMPT_START>';
+      case 'markdown':
+        return '--- BEGIN ISSUE FIX PROMPT ---';
+      case 'xml':
+        return '<prompt type="issue_diagnostic">';
+      case 'custom':
+        return customPromptStart;
+    }
+  };
+
+  const getPromptEndText = () => {
+    switch (promptStyle) {
+      case 'tags':
+        return '<PROMPT_END>';
+      case 'markdown':
+        return '--- END ISSUE FIX PROMPT ---';
+      case 'xml':
+        return '</prompt>';
+      case 'custom':
+        return customPromptEnd;
+    }
+  };
+
+  const generatedPromptContent = useMemo(() => {
+    const startText = getPromptStartText();
+    const endText = getPromptEndText();
+
+    let body = '';
+    if (promptIssueTarget === 'exitCode1') {
+      body = `[TARGET ENVIRONMENT]: Google AI Studio & GitHub Actions
+[TASK]: Fix "Process completed with exit code 1." in build verification.
+[ERROR LOG]:
+> react-example@0.0.0 lint
+> tsc --noEmit
+src/components/ViewCodeModal.tsx(2428,20): error TS2304: Cannot find name 'Mail'.
+src/components/ViewCodeModal.tsx(2659,18): error TS2304: Cannot find name 'Plus'.
+Process completed with exit code 1.
+
+[DIAGNOSTIC INSTRUCTIONS]:
+1. Identify missing symbol imports in src/components/ViewCodeModal.tsx.
+2. Add "import { Mail, Plus } from 'lucide-react';" to top-level imports.
+3. Verify that running "npm run lint" yields zero errors and returns exit code 0.
+[REQUIRED OUTPUT]: Return precise, clean drop-in code edits without placeholders.`;
+    } else if (promptIssueTarget === 'missingImports') {
+      body = `[TASK]: Resolve TypeScript TS2304 Undeclared Identifiers.
+[TARGET FILE]: src/components/ViewCodeModal.tsx
+[SYMBOLS]: Mail, Plus from 'lucide-react'
+[RESOLUTION]: Update Lucide icon imports at line 1-50. Ensure no circular dependencies.
+[VERIFICATION]: Run "tsc --noEmit" to confirm exit status 0.`;
+    } else {
+      body = `[TARGET ENVIRONMENT]: GitHub Actions CI/CD Runner
+[WORKFLOW FAILURE]: Process completed with exit code 1 in step "Run npm run build"
+[RUNNER OS]: ubuntu-latest (Node.js 20.x)
+[ACTIONS NEEDED]:
+1. Check .github/workflows/*.yml for node-version compatibility.
+2. Ensure package-lock.json is synchronized with package.json for "npm ci".
+3. Verify all VITE_* repository secrets are passed to runner env.`;
+    }
+
+    return `${startText}\n${body}\n${endText}`;
+  }, [promptStyle, customPromptStart, customPromptEnd, promptIssueTarget]);
+
+  const handleCopyFullPrompt = () => {
+    navigator.clipboard.writeText(generatedPromptContent);
+    setCopiedPrompt(true);
+    setTimeout(() => setCopiedPrompt(false), 2500);
+  };
+
+  // Filter HTTP Status Codes based on active category tab & search keyword
+  const filteredHttpStatusCodes = useMemo(() => {
+    return ALL_HTTP_STATUS_CODES.filter((item) => {
+      const matchesTab = httpStatusTab === 'All' || item.category === httpStatusTab;
+      if (!matchesTab) return false;
+      if (!httpStatusQuery.trim()) return true;
+      const q = httpStatusQuery.toLowerCase();
+      return (
+        item.code.toString().includes(q) ||
+        item.name.toLowerCase().includes(q) ||
+        item.summary.toLowerCase().includes(q) ||
+        item.rfc.toLowerCase().includes(q)
+      );
+    });
+  }, [httpStatusTab, httpStatusQuery]);
 
   // Filter topics based on category and search query
   const filteredTopics = HELP_TOPICS.filter((topic) => {
@@ -561,8 +777,10 @@ export const HelpView: React.FC<HelpViewProps> = ({ onStartTour }) => {
               <span className="text-zinc-200 font-semibold">Pages</span>,{' '}
               <span className="text-zinc-200 font-semibold">Events</span>,{' '}
               <span className="text-zinc-200 font-semibold">Trash & Delete</span>,{' '}
-              <span className="text-zinc-200 font-semibold">Quota</span>, and{' '}
-              <span className="text-zinc-200 font-semibold">Upgrade</span>.
+              <span className="text-zinc-200 font-semibold">Quota</span>,{' '}
+              <span className="text-zinc-200 font-semibold">Upgrade</span>,{' '}
+              <span className="text-zinc-200 font-semibold">Errors</span>, and{' '}
+              <span className="text-zinc-200 font-semibold">Issues</span>.
             </p>
           </div>
 
@@ -634,7 +852,8 @@ export const HelpView: React.FC<HelpViewProps> = ({ onStartTour }) => {
             { id: 'Delete', label: 'Delete Help', icon: Trash2 },
             { id: 'Quota', label: 'Quota Help', icon: Sliders },
             { id: 'Upgrade', label: 'Upgrade Help', icon: Zap },
-            { id: 'Errors', label: 'Errors Help', icon: AlertOctagon }
+            { id: 'Errors', label: 'Errors Help', icon: AlertOctagon },
+            { id: 'Issues', label: 'Issues Help', icon: AlertTriangle }
           ] as { id: HelpCategory; label: string; icon: any }[]
         ).map((tab) => {
           const Icon = tab.icon;
@@ -660,8 +879,8 @@ export const HelpView: React.FC<HelpViewProps> = ({ onStartTour }) => {
         })}
       </div>
 
-      {/* Quick Action Bento Grid (All 10 Categories) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+      {/* Quick Action Bento Grid (All Categories) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {[
           {
             title: 'Videos Help',
@@ -732,6 +951,20 @@ export const HelpView: React.FC<HelpViewProps> = ({ onStartTour }) => {
             icon: Zap,
             bg: 'bg-orange-50 text-orange-700 border-orange-200/80',
             actionCat: 'Upgrade'
+          },
+          {
+            title: 'Errors Help',
+            desc: 'HTTP 4xx & 5xx Codes',
+            icon: AlertOctagon,
+            bg: 'bg-yellow-50 text-yellow-800 border-yellow-200/80',
+            actionCat: 'Errors'
+          },
+          {
+            title: 'Issues Help',
+            desc: 'Exit Code 1 & Diagnostics',
+            icon: AlertTriangle,
+            bg: 'bg-rose-50 text-rose-700 border-rose-200/80',
+            actionCat: 'Issues'
           }
         ].map((card) => {
           const Icon = card.icon;
@@ -767,7 +1000,7 @@ export const HelpView: React.FC<HelpViewProps> = ({ onStartTour }) => {
           <h3 className="text-sm font-bold text-zinc-800">No help guides found</h3>
           <p className="text-xs text-zinc-500 mt-1 max-w-sm">
             We couldn't find any guides matching "{searchQuery}". Try searching for
-            "Videos", "News", "Photos", "Polls", "Quiz", "Pages", "Events", "Shopping", "Delete", "Quota", "Upgrade", or "Errors".
+            "Videos", "News", "Photos", "Polls", "Quiz", "Pages", "Events", "Shopping", "Delete", "Quota", "Upgrade", "Errors", or "Issues".
           </p>
           <button
             type="button"
@@ -810,6 +1043,17 @@ export const HelpView: React.FC<HelpViewProps> = ({ onStartTour }) => {
                       </p>
                     </div>
                   </div>
+
+                  {topic.category === 'Issues' && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenViewCode('TypeScript', 'Issues')}
+                      className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs shrink-0 self-start sm:self-center"
+                    >
+                      <Code2 size={14} />
+                      <span>Inspect in View Code (Exit Code 1)</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Topic Content: Steps & Pro Tips */}
@@ -854,6 +1098,769 @@ export const HelpView: React.FC<HelpViewProps> = ({ onStartTour }) => {
                     </div>
                   </div>
                 </div>
+
+                {/* Dedicated Interactive 1xx, 2xx, 3xx, 4xx, 5xx Status Code Explorer for Errors Help */}
+                {topic.category === 'Errors' && (
+                  <div className="px-5 sm:px-6 pb-6 pt-1 border-t border-zinc-100 space-y-4">
+                    {/* Section Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="p-1.5 rounded-lg bg-yellow-100 text-yellow-800">
+                            <AlertOctagon size={16} />
+                          </span>
+                          <h3 className="text-sm font-black text-zinc-900">
+                            Comprehensive List of HTTP Status Codes (1xx, 2xx, 3xx, 4xx, 5xx)
+                          </h3>
+                        </div>
+                        <p className="text-xs text-zinc-500 mt-1">
+                          Standard RFC specifications across all 5 HTTP response categories. 4xx codes feature the Solo Parent Icon; 5xx codes feature the Parents Icon.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 self-start sm:self-auto shrink-0">
+                        <span className="text-[11px] font-bold text-zinc-600 bg-zinc-100 px-2.5 py-1 rounded-full border border-zinc-200">
+                          {filteredHttpStatusCodes.length} of {ALL_HTTP_STATUS_CODES.length} Codes
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Class Summary Badges Banner */}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                      <div className="p-2.5 rounded-2xl bg-sky-50 border border-sky-200/80 space-y-0.5">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-sky-800">
+                          <span>1xx Info</span>
+                          <span className="font-mono">4</span>
+                        </div>
+                        <div className="text-[10px] text-sky-600 truncate">100 &ndash; 103</div>
+                      </div>
+
+                      <div className="p-2.5 rounded-2xl bg-emerald-50 border border-emerald-200/80 space-y-0.5">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-emerald-800">
+                          <span>2xx Success</span>
+                          <span className="font-mono">10</span>
+                        </div>
+                        <div className="text-[10px] text-emerald-600 truncate">200 &ndash; 226</div>
+                      </div>
+
+                      <div className="p-2.5 rounded-2xl bg-purple-50 border border-purple-200/80 space-y-0.5">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-purple-800">
+                          <span>3xx Redirect</span>
+                          <span className="font-mono">8</span>
+                        </div>
+                        <div className="text-[10px] text-purple-600 truncate">300 &ndash; 308</div>
+                      </div>
+
+                      <div className="p-2.5 rounded-2xl bg-amber-50 border border-amber-200/80 space-y-0.5">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-amber-800">
+                          <span className="flex items-center gap-1">
+                            <SoloParentIcon size={12} className="text-amber-700" />
+                            <span>4xx Client</span>
+                          </span>
+                          <span className="font-mono">29</span>
+                        </div>
+                        <div className="text-[10px] text-amber-600 truncate">Solo Parent Icon</div>
+                      </div>
+
+                      <div className="p-2.5 rounded-2xl bg-rose-50 border border-rose-200/80 space-y-0.5 col-span-2 sm:col-span-1">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-rose-800">
+                          <span className="flex items-center gap-1">
+                            <ParentsIcon size={12} className="text-rose-700" />
+                            <span>5xx Server</span>
+                          </span>
+                          <span className="font-mono">11</span>
+                        </div>
+                        <div className="text-[10px] text-rose-600 truncate">Parents Icon</div>
+                      </div>
+                    </div>
+
+                    {/* Filters and Search Bar */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-zinc-50 p-2 rounded-2xl border border-zinc-200">
+                      {/* Filter Tabs */}
+                      <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+                        {(
+                          [
+                            { id: 'All', label: 'All Codes', count: 62 },
+                            { id: '1xx', label: '1xx Info', count: 4 },
+                            { id: '2xx', label: '2xx Success', count: 10 },
+                            { id: '3xx', label: '3xx Redirect', count: 8 },
+                            { id: '4xx', label: '4xx Client', count: 29, icon: SoloParentIcon },
+                            { id: '5xx', label: '5xx Server', count: 11, icon: ParentsIcon }
+                          ] as { id: 'All' | HttpStatusClass; label: string; count: number; icon?: any }[]
+                        ).map((tab) => {
+                          const isSelected = httpStatusTab === tab.id;
+                          const IconComp = tab.icon;
+                          return (
+                            <button
+                              key={tab.id}
+                              type="button"
+                              onClick={() => setHttpStatusTab(tab.id)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                                isSelected
+                                  ? 'bg-zinc-900 text-white shadow-xs'
+                                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/70'
+                              }`}
+                            >
+                              {IconComp && <IconComp size={13} className={isSelected ? 'text-white' : 'text-zinc-500'} />}
+                              <span>{tab.label}</span>
+                              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                                isSelected ? 'bg-zinc-800 text-zinc-300' : 'bg-zinc-200/80 text-zinc-600'
+                              }`}>
+                                {tab.count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Search Input */}
+                      <div className="relative w-full sm:w-56 shrink-0">
+                        <Search size={14} className="absolute left-3 top-2.5 text-zinc-400" />
+                        <input
+                          type="text"
+                          value={httpStatusQuery}
+                          onChange={(e) => setHttpStatusQuery(e.target.value)}
+                          placeholder="Search code or name..."
+                          className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-zinc-200 rounded-xl text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                        />
+                        {httpStatusQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setHttpStatusQuery('')}
+                            className="absolute right-2.5 top-2 text-zinc-400 hover:text-zinc-600 text-xs font-bold cursor-pointer"
+                          >
+                            &times;
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status Codes Cards List */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-[520px] overflow-y-auto pr-1">
+                      {filteredHttpStatusCodes.map((item) => {
+                        const isCopied = copiedStatusCode === item.code;
+                        return (
+                          <div
+                            key={item.code}
+                            className="p-3.5 rounded-2xl border border-zinc-200/90 bg-white hover:border-zinc-300 hover:shadow-xs transition space-y-2 flex flex-col justify-between"
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-0.5 rounded-lg font-mono font-black text-xs border ${item.badgeColor}`}>
+                                    {item.code}
+                                  </span>
+                                  <span className="font-bold text-xs text-zinc-900">
+                                    {item.name}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {item.category === '4xx' && (
+                                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300" title="Solo Parent Icon">
+                                      <SoloParentIcon size={12} className="text-amber-800" />
+                                      <span>Solo Parent</span>
+                                    </span>
+                                  )}
+                                  {item.category === '5xx' && (
+                                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-300" title="Parents Icon">
+                                      <ParentsIcon size={12} className="text-rose-800" />
+                                      <span>Parents</span>
+                                    </span>
+                                  )}
+                                  {item.category === '1xx' && (
+                                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-300">
+                                      <Info size={11} className="text-sky-700" />
+                                      <span>Info</span>
+                                    </span>
+                                  )}
+                                  {item.category === '2xx' && (
+                                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                      <CheckCircle2 size={11} className="text-emerald-700" />
+                                      <span>Success</span>
+                                    </span>
+                                  )}
+                                  {item.category === '3xx' && (
+                                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300">
+                                      <ArrowUpRight size={11} className="text-purple-700" />
+                                      <span>Redirect</span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <p className="text-xs text-zinc-600 leading-relaxed">
+                                {item.summary}
+                              </p>
+                            </div>
+
+                            <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[11px] text-zinc-500">
+                              <span className="font-mono text-[10px] text-zinc-400">
+                                {item.rfc}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyStatus(item.code, item.name)}
+                                className="px-2 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer"
+                                title="Copy code number and name"
+                              >
+                                {isCopied ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
+                                <span>{isCopied ? 'Copied' : 'Copy'}</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {filteredHttpStatusCodes.length === 0 && (
+                        <div className="col-span-full py-8 text-center bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
+                          <p className="text-xs font-bold text-zinc-600">
+                            No status codes matching "{httpStatusQuery}"
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHttpStatusTab('All');
+                              setHttpStatusQuery('');
+                            }}
+                            className="mt-2 text-xs text-amber-600 font-bold hover:underline cursor-pointer"
+                          >
+                            Reset filters
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Dedicated Interactive GitHub & Google AI Studio Exit Code 1 Troubleshooter */}
+                {topic.category === 'Issues' && (
+                  <div className="px-5 sm:px-6 pb-6 pt-1 border-t border-zinc-100 space-y-5">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="p-1.5 rounded-lg bg-rose-100 text-rose-800">
+                            <AlertTriangle size={16} />
+                          </span>
+                          <h3 className="text-sm font-black text-zinc-900">
+                            How to Fix "Process completed with exit code 1." (GitHub & Google AI Studio)
+                          </h3>
+                        </div>
+                        <p className="text-xs text-zinc-500 mt-1">
+                          Select your platform to view verified fix procedures, terminal diagnostics, and common compiler assertions.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenViewCode('TypeScript', 'Issues')}
+                        className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 self-start sm:self-auto cursor-pointer shadow-xs"
+                      >
+                        <Code2 size={13} className="text-amber-400" />
+                        <span>Inspect ProcessCompletedWithExitCode1.log</span>
+                      </button>
+                    </div>
+
+                    {/* Platform Selector Tabs */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 p-1 bg-zinc-100 rounded-2xl border border-zinc-200">
+                      <button
+                        type="button"
+                        onClick={() => setIssuesPlatformTab('aistudio')}
+                        className={`py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          issuesPlatformTab === 'aistudio'
+                            ? 'bg-white text-zinc-950 shadow-xs'
+                            : 'text-zinc-600 hover:text-zinc-950'
+                        }`}
+                      >
+                        <Cpu size={14} className={issuesPlatformTab === 'aistudio' ? 'text-amber-500' : 'text-zinc-400'} />
+                        <span className="truncate">Google AI Studio</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setIssuesPlatformTab('github')}
+                        className={`py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          issuesPlatformTab === 'github'
+                            ? 'bg-white text-zinc-950 shadow-xs'
+                            : 'text-zinc-600 hover:text-zinc-950'
+                        }`}
+                      >
+                        <Github size={14} className={issuesPlatformTab === 'github' ? 'text-indigo-600' : 'text-zinc-400'} />
+                        <span className="truncate">GitHub Actions</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setIssuesPlatformTab('prompt')}
+                        className={`py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          issuesPlatformTab === 'prompt'
+                            ? 'bg-white text-zinc-950 shadow-xs'
+                            : 'text-zinc-600 hover:text-zinc-950'
+                        }`}
+                      >
+                        <MessageSquareCode size={14} className={issuesPlatformTab === 'prompt' ? 'text-violet-600' : 'text-zinc-400'} />
+                        <span className="truncate">Prompt Start & End</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setIssuesPlatformTab('terminal')}
+                        className={`py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                          issuesPlatformTab === 'terminal'
+                            ? 'bg-white text-zinc-950 shadow-xs'
+                            : 'text-zinc-600 hover:text-zinc-950'
+                        }`}
+                      >
+                        <Terminal size={14} className={issuesPlatformTab === 'terminal' ? 'text-emerald-600' : 'text-zinc-400'} />
+                        <span className="truncate">Terminal Simulator</span>
+                      </button>
+                    </div>
+
+                    {/* 1. GOOGLE AI STUDIO FIX GUIDE */}
+                    {issuesPlatformTab === 'aistudio' && (
+                      <div className="space-y-4 animate-in fade-in-50 duration-150">
+                        <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-amber-950 text-xs flex items-start gap-3">
+                          <Cpu size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                          <div className="space-y-1">
+                            <div className="font-bold text-amber-900">Why does Exit Code 1 happen in Google AI Studio?</div>
+                            <p className="text-amber-800 leading-relaxed">
+                              When executing automated tools like <code className="font-mono bg-amber-100 px-1 py-0.5 rounded text-[11px]">compile_applet</code> or <code className="font-mono bg-amber-100 px-1 py-0.5 rounded text-[11px]">lint_applet</code>, the TypeScript compiler (<code className="font-mono bg-amber-100 px-1 py-0.5 rounded text-[11px]">tsc --noEmit</code>) halts execution if undeclared components or icons are referenced in JSX.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="p-4 rounded-2xl bg-white border border-zinc-200 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-amber-500 text-zinc-950 text-[11px] font-black flex items-center justify-center">1</span>
+                              <h4 className="font-bold text-xs text-zinc-900">Inspect Stderr & Line Numbers</h4>
+                            </div>
+                            <p className="text-xs text-zinc-600 leading-relaxed">
+                              Look at the compiler log output to locate the exact file and line number:
+                            </p>
+                            <div className="p-2.5 rounded-xl bg-zinc-900 text-zinc-300 font-mono text-[11px] overflow-x-auto">
+                              src/components/ViewCodeModal.tsx(2428,20): error TS2304: Cannot find name 'Mail'.
+                            </div>
+                          </div>
+
+                          <div className="p-4 rounded-2xl bg-white border border-zinc-200 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-amber-500 text-zinc-950 text-[11px] font-black flex items-center justify-center">2</span>
+                              <h4 className="font-bold text-xs text-zinc-900">Add Missing Top-Level Imports</h4>
+                            </div>
+                            <p className="text-xs text-zinc-600 leading-relaxed">
+                              Add the identifier to your Lucide or component imports at the top of the file:
+                            </p>
+                            <div className="p-2.5 rounded-xl bg-zinc-900 text-emerald-400 font-mono text-[11px] overflow-x-auto">
+                              import &#123; Mail, Plus &#125; from 'lucide-react';
+                            </div>
+                          </div>
+
+                          <div className="p-4 rounded-2xl bg-white border border-zinc-200 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-amber-500 text-zinc-950 text-[11px] font-black flex items-center justify-center">3</span>
+                              <h4 className="font-bold text-xs text-zinc-900">Install Missing Packages</h4>
+                            </div>
+                            <p className="text-xs text-zinc-600 leading-relaxed">
+                              If an external npm library is missing, install it with the platform package tool:
+                            </p>
+                            <div className="p-2.5 rounded-xl bg-zinc-900 text-amber-300 font-mono text-[11px] overflow-x-auto">
+                              install_applet_package(['lucide-react'])
+                            </div>
+                          </div>
+
+                          <div className="p-4 rounded-2xl bg-white border border-zinc-200 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] font-black flex items-center justify-center">4</span>
+                              <h4 className="font-bold text-xs text-zinc-900">Verify Exit Code 0 Transition</h4>
+                            </div>
+                            <p className="text-xs text-zinc-600 leading-relaxed">
+                              Run the linter. Zero errors confirms the exit code successfully returned 0:
+                            </p>
+                            <div className="p-2.5 rounded-xl bg-zinc-900 text-emerald-400 font-mono text-[11px] overflow-x-auto">
+                              Linting completed successfully. (exit status: 0)
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 2. GITHUB ACTIONS FIX GUIDE */}
+                    {issuesPlatformTab === 'github' && (
+                      <div className="space-y-4 animate-in fade-in-50 duration-150">
+                        <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 text-indigo-950 text-xs flex items-start gap-3">
+                          <Github size={18} className="text-indigo-600 shrink-0 mt-0.5" />
+                          <div className="space-y-1">
+                            <div className="font-bold text-indigo-900">Why does Exit Code 1 happen in GitHub Actions?</div>
+                            <p className="text-indigo-800 leading-relaxed">
+                              In GitHub Actions, any non-zero exit status aborts the runner job immediately. Common reasons include lockfile divergence during <code className="font-mono bg-indigo-100 px-1 py-0.5 rounded text-[11px]">npm ci</code>, Node version incompatibilities, missing repository secrets, or strict linter rules under <code className="font-mono bg-indigo-100 px-1 py-0.5 rounded text-[11px]">CI=true</code>.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="p-4 rounded-2xl bg-white border border-zinc-200 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-black flex items-center justify-center">1</span>
+                              <h4 className="font-bold text-xs text-zinc-900">Examine the Failing Workflow Step</h4>
+                            </div>
+                            <p className="text-xs text-zinc-600 leading-relaxed">
+                              Go to your GitHub repo &rarr; <strong>Actions</strong> tab &rarr; click the failed workflow run &rarr; expand the red step (e.g. "Run npm run build") to see the failure log.
+                            </p>
+                          </div>
+
+                          <div className="p-4 rounded-2xl bg-white border border-zinc-200 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-black flex items-center justify-center">2</span>
+                              <h4 className="font-bold text-xs text-zinc-900">Align Node.js Runner Version</h4>
+                            </div>
+                            <p className="text-xs text-zinc-600 leading-relaxed">
+                              In <code className="font-mono text-[11px]">.github/workflows/deploy.yml</code>, ensure the node version matches your project:
+                            </p>
+                            <div className="p-2.5 rounded-xl bg-zinc-900 text-zinc-300 font-mono text-[11px] overflow-x-auto">
+                              - uses: actions/setup-node@v4<br />
+                              &nbsp;&nbsp;with:<br />
+                              &nbsp;&nbsp;&nbsp;&nbsp;node-version: '20.x'<br />
+                              &nbsp;&nbsp;&nbsp;&nbsp;cache: 'npm'
+                            </div>
+                          </div>
+
+                          <div className="p-4 rounded-2xl bg-white border border-zinc-200 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-black flex items-center justify-center">3</span>
+                              <h4 className="font-bold text-xs text-zinc-900">Sync package-lock.json (Fix npm ci)</h4>
+                            </div>
+                            <p className="text-xs text-zinc-600 leading-relaxed">
+                              If <code className="font-mono text-[11px]">package-lock.json</code> is out of sync with <code className="font-mono text-[11px]">package.json</code>, <code className="font-mono text-[11px]">npm ci</code> fails with exit 1. Re-sync locally:
+                            </p>
+                            <div className="p-2.5 rounded-xl bg-zinc-900 text-amber-300 font-mono text-[11px] overflow-x-auto">
+                              npm install && git add package-lock.json && git commit -m "fix: sync lockfile"
+                            </div>
+                          </div>
+
+                          <div className="p-4 rounded-2xl bg-white border border-zinc-200 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-black flex items-center justify-center">4</span>
+                              <h4 className="font-bold text-xs text-zinc-900">Inject Missing Repository Secrets</h4>
+                            </div>
+                            <p className="text-xs text-zinc-600 leading-relaxed">
+                              Under <strong>Repo Settings &rarr; Secrets and variables &rarr; Actions</strong>, add environment secrets and bind them to steps:
+                            </p>
+                            <div className="p-2.5 rounded-xl bg-zinc-900 text-zinc-300 font-mono text-[11px] overflow-x-auto">
+                              env:<br />
+                              &nbsp;&nbsp;VITE_FIREBASE_API_KEY: $&#123;&#123; secrets.VITE_FIREBASE_API_KEY &#125;&#125;
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3. PROMPT START AND END TEXT BUILDER & GUIDE */}
+                    {issuesPlatformTab === 'prompt' && (
+                      <div className="space-y-4 animate-in fade-in-50 duration-150">
+                        {/* Concept Banner */}
+                        <div className="p-4 rounded-2xl bg-violet-50/80 border border-violet-200/80 text-violet-950 text-xs flex items-start gap-3">
+                          <MessageSquareCode size={18} className="text-violet-600 shrink-0 mt-0.5" />
+                          <div className="space-y-1">
+                            <div className="font-bold text-violet-900">What is Prompt Start and End Text?</div>
+                            <p className="text-violet-800 leading-relaxed">
+                              Prompt Start and End Text are explicit boundary markers that wrap AI instructions and raw error traces. In developer workflows, they prevent prompt truncation, block prompt injection from untrusted logs, and instruct models to produce clean, isolated code solutions without verbose conversational filler.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Interactive Delimiter Configurator */}
+                        <div className="p-4 rounded-3xl bg-white border border-zinc-200 shadow-2xs space-y-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 pb-3">
+                            <div>
+                              <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <Sparkles size={14} className="text-amber-500" />
+                                <span>Prompt Delimiter Format & Issue Preset</span>
+                              </h4>
+                              <p className="text-[11px] text-zinc-500">
+                                Select delimiter style and issue context to generate a standard prompt with explicit Start & End text.
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={handleCopyFullPrompt}
+                              className="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs self-start sm:self-auto"
+                            >
+                              {copiedPrompt ? <Check size={13} /> : <Copy size={13} />}
+                              <span>{copiedPrompt ? 'Copied Prompt!' : 'Copy Formatted Prompt'}</span>
+                            </button>
+                          </div>
+
+                          {/* Style & Issue Options */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Delimiter Presets */}
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">
+                                1. Delimiter Syntax Style
+                              </label>
+                              <div className="grid grid-cols-2 gap-1.5">
+                                {[
+                                  { id: 'tags', label: '<PROMPT_START>', sub: 'Tag Delimiters' },
+                                  { id: 'markdown', label: '--- BEGIN ---', sub: 'Markdown Rules' },
+                                  { id: 'xml', label: '<prompt>', sub: 'XML Wrapper' },
+                                  { id: 'custom', label: 'Custom Text', sub: 'User Defined' }
+                                ].map((item) => (
+                                  <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => setPromptStyle(item.id as any)}
+                                    className={`p-2 rounded-xl text-left border transition cursor-pointer text-xs ${
+                                      promptStyle === item.id
+                                        ? 'bg-violet-50 border-violet-400 text-violet-900 font-bold'
+                                        : 'bg-zinc-50/80 border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                                    }`}
+                                  >
+                                    <div className="font-mono text-[11px] truncate">{item.label}</div>
+                                    <div className="text-[10px] text-zinc-500 font-normal">{item.sub}</div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Issue Preset */}
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">
+                                2. Issue Troubleshooting Preset
+                              </label>
+                              <div className="space-y-1.5">
+                                {[
+                                  { id: 'exitCode1', label: 'Process Completed with Exit Code 1', desc: 'Compiler stderr with tsc --noEmit' },
+                                  { id: 'missingImports', label: 'TS2304: Missing Symbol Imports', desc: 'Lucide React undeclared JSX components' },
+                                  { id: 'githubCI', label: 'GitHub Actions Runner Job Failure', desc: 'CI npm ci & node version mismatch' }
+                                ].map((preset) => (
+                                  <button
+                                    key={preset.id}
+                                    type="button"
+                                    onClick={() => setPromptIssueTarget(preset.id as any)}
+                                    className={`w-full p-2 rounded-xl text-left border transition cursor-pointer text-xs ${
+                                      promptIssueTarget === preset.id
+                                        ? 'bg-amber-50 border-amber-400 text-amber-950 font-bold'
+                                        : 'bg-zinc-50/80 border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                                    }`}
+                                  >
+                                    <div className="font-bold truncate">{preset.label}</div>
+                                    <div className="text-[10px] text-zinc-500 font-normal truncate">{preset.desc}</div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Custom Text Inputs if custom is selected */}
+                          {promptStyle === 'custom' && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-100 animate-in fade-in-50">
+                              <div className="space-y-1">
+                                <label className="text-[10px] uppercase font-bold text-zinc-500">Custom Prompt Start Text</label>
+                                <input
+                                  type="text"
+                                  value={customPromptStart}
+                                  onChange={(e) => setCustomPromptStart(e.target.value)}
+                                  placeholder="e.g. <<<START_PROMPT>>>"
+                                  className="w-full px-3 py-1.5 text-xs font-mono bg-zinc-50 border border-zinc-300 rounded-xl text-zinc-900 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] uppercase font-bold text-zinc-500">Custom Prompt End Text</label>
+                                <input
+                                  type="text"
+                                  value={customPromptEnd}
+                                  onChange={(e) => setCustomPromptEnd(e.target.value)}
+                                  placeholder="e.g. <<<END_PROMPT>>>"
+                                  className="w-full px-3 py-1.5 text-xs font-mono bg-zinc-50 border border-zinc-300 rounded-xl text-zinc-900 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Visual Prompt Preview with Boundary Highlighting */}
+                          <div className="space-y-2 pt-2">
+                            <div className="flex items-center justify-between text-xs text-zinc-500">
+                              <span className="font-bold text-zinc-700">Live Prompt Construction with Boundary Markers:</span>
+                              <span className="text-[10px] font-mono text-zinc-400">Ready to paste into AI Studio or GitHub</span>
+                            </div>
+
+                            <div className="rounded-2xl bg-zinc-950 border border-zinc-800 p-4 font-mono text-xs overflow-x-auto space-y-2 select-text">
+                              {/* Highlighted Prompt Start Text */}
+                              <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 font-sans">
+                                  Prompt Start Text
+                                </span>
+                                <span className="text-amber-400 font-bold">{getPromptStartText()}</span>
+                              </div>
+
+                              {/* Prompt Body */}
+                              <div className="text-zinc-300 pl-3 border-l-2 border-zinc-800 space-y-1 py-1 text-[11px] leading-relaxed whitespace-pre-wrap">
+                                {promptIssueTarget === 'exitCode1' && (
+                                  <>
+                                    <span className="text-zinc-500">[TARGET ENVIRONMENT]:</span> Google AI Studio & GitHub Actions<br />
+                                    <span className="text-zinc-500">[TASK]:</span> Fix "Process completed with exit code 1." in build verification.<br />
+                                    <span className="text-zinc-500">[ERROR LOG]:</span><br />
+                                    <span className="text-rose-400">&gt; react-example@0.0.0 lint<br />&gt; tsc --noEmit<br />src/components/ViewCodeModal.tsx(2428,20): error TS2304: Cannot find name 'Mail'.<br />src/components/ViewCodeModal.tsx(2659,18): error TS2304: Cannot find name 'Plus'.<br />Process completed with exit code 1.</span><br /><br />
+                                    <span className="text-zinc-500">[DIAGNOSTIC INSTRUCTIONS]:</span><br />
+                                    1. Identify missing symbol imports in src/components/ViewCodeModal.tsx.<br />
+                                    2. Add "import &#123; Mail, Plus &#125; from 'lucide-react';" to top-level imports.<br />
+                                    3. Verify that running "npm run lint" yields zero errors and returns exit code 0.<br />
+                                    <span className="text-zinc-500">[REQUIRED OUTPUT]:</span> Return precise, clean drop-in code edits without placeholders.
+                                  </>
+                                )}
+                                {promptIssueTarget === 'missingImports' && (
+                                  <>
+                                    <span className="text-zinc-500">[TASK]:</span> Resolve TypeScript TS2304 Undeclared Identifiers.<br />
+                                    <span className="text-zinc-500">[TARGET FILE]:</span> src/components/ViewCodeModal.tsx<br />
+                                    <span className="text-zinc-500">[SYMBOLS]:</span> Mail, Plus from 'lucide-react'<br />
+                                    <span className="text-zinc-500">[RESOLUTION]:</span> Update Lucide icon imports at line 1-50. Ensure no circular dependencies.<br />
+                                    <span className="text-zinc-500">[VERIFICATION]:</span> Run "tsc --noEmit" to confirm exit status 0.
+                                  </>
+                                )}
+                                {promptIssueTarget === 'githubCI' && (
+                                  <>
+                                    <span className="text-zinc-500">[TARGET ENVIRONMENT]:</span> GitHub Actions CI/CD Runner<br />
+                                    <span className="text-zinc-500">[WORKFLOW FAILURE]:</span> Process completed with exit code 1 in step "Run npm run build"<br />
+                                    <span className="text-zinc-500">[RUNNER OS]:</span> ubuntu-latest (Node.js 20.x)<br />
+                                    <span className="text-zinc-500">[ACTIONS NEEDED]:</span><br />
+                                    1. Check .github/workflows/*.yml for node-version compatibility.<br />
+                                    2. Ensure package-lock.json is synchronized with package.json for "npm ci".<br />
+                                    3. Verify all VITE_* repository secrets are passed to runner env.
+                                  </>
+                                )}
+                              </div>
+
+                              {/* Highlighted Prompt End Text */}
+                              <div className="flex items-center gap-2 pt-1">
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-sans">
+                                  Prompt End Text
+                                </span>
+                                <span className="text-emerald-400 font-bold">{getPromptEndText()}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Best Practices Cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
+                            <div className="text-[10px] font-bold uppercase text-zinc-500">Anti-Truncation</div>
+                            <div className="text-xs font-bold text-zinc-900">Prevents Incomplete Edits</div>
+                            <p className="text-[11px] text-zinc-600 leading-relaxed">
+                              Closing with Prompt End Text signals to the model that all instructions are delivered, preventing cut-off answers.
+                            </p>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
+                            <div className="text-[10px] font-bold uppercase text-zinc-500">Security Boundary</div>
+                            <div className="text-xs font-bold text-zinc-900">Blocks Injection Attacks</div>
+                            <p className="text-[11px] text-zinc-600 leading-relaxed">
+                              Delimiter tags isolate untrusted compiler stderr or terminal crash traces from actual instructions.
+                            </p>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
+                            <div className="text-[10px] font-bold uppercase text-zinc-500">Clean Code Output</div>
+                            <div className="text-xs font-bold text-zinc-900">Zero-Placeholder Delivery</div>
+                            <p className="text-[11px] text-zinc-600 leading-relaxed">
+                              End text mandates complete drop-in TSX/TS replacements, avoiding comments like "// rest of code remains the same".
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 4. TERMINAL COMMANDS & CLI SIMULATOR */}
+                    {issuesPlatformTab === 'terminal' && (
+                      <div className="space-y-4 animate-in fade-in-50 duration-150">
+                        {/* Copyable CLI Commands Table */}
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-bold text-zinc-800 uppercase tracking-wider">
+                            Essential Diagnostic Terminal Commands
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                              { cmd: 'npm run lint', desc: 'Runs tsc --noEmit to check TypeScript errors without generating output' },
+                              { cmd: 'echo $?', desc: 'Prints the exit status code of the preceding command (0 = success, 1 = failure)' },
+                              { cmd: 'npm run build', desc: 'Compiles full production bundle with Vite/Next.js to catch packaging errors' },
+                              { cmd: 'npm ci', desc: 'Runs pristine dependency install matching GitHub Actions CI runner behavior' }
+                            ].map((item) => {
+                              const isCopied = copiedCmd === item.cmd;
+                              return (
+                                <div key={item.cmd} className="p-3 rounded-2xl bg-white border border-zinc-200 flex items-center justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="font-mono text-xs font-bold text-zinc-900 truncate">{item.cmd}</div>
+                                    <div className="text-[11px] text-zinc-500 line-clamp-1">{item.desc}</div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopyCommand(item.cmd)}
+                                    className="px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs transition cursor-pointer shrink-0 flex items-center gap-1"
+                                  >
+                                    {isCopied ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                                    <span>{isCopied ? 'Copied' : 'Copy'}</span>
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Interactive Simulator Card */}
+                        <div className="p-4 rounded-3xl bg-zinc-950 text-white border border-zinc-800 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
+                            <div className="flex items-center gap-2">
+                              <Terminal size={16} className="text-amber-400" />
+                              <span className="font-mono text-xs font-bold">Interactive CLI Exit Status Simulator</span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setIsSimulatedResolved(!isSimulatedResolved)}
+                              className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                isSimulatedResolved
+                                  ? 'bg-emerald-500 text-zinc-950 font-black'
+                                  : 'bg-rose-600 text-white'
+                              }`}
+                            >
+                              <RefreshCw size={12} />
+                              <span>{isSimulatedResolved ? 'Simulated Status: Exit 0 (Success)' : 'Simulated Status: Exit 1 (Failed)'}</span>
+                            </button>
+                          </div>
+
+                          <div className="font-mono text-xs space-y-1.5 bg-black/60 p-3.5 rounded-2xl select-text overflow-x-auto">
+                            <div className="text-zinc-500">$ npm run lint && echo "Exit code: $?"</div>
+                            <div className="text-zinc-400">&gt; react-example@0.0.0 lint</div>
+                            <div className="text-zinc-400">&gt; tsc --noEmit</div>
+
+                            {!isSimulatedResolved ? (
+                              <>
+                                <div className="text-rose-400 pt-1">
+                                  src/components/ViewCodeModal.tsx(2428,20): error TS2304: Cannot find name 'Mail'.
+                                </div>
+                                <div className="text-rose-400">
+                                  src/components/ViewCodeModal.tsx(2659,18): error TS2304: Cannot find name 'Plus'.
+                                </div>
+                                <div className="text-zinc-400 pt-1">Found 2 errors in 1 file.</div>
+                                <div className="text-rose-400 font-bold bg-rose-950/80 p-2 rounded-xl mt-1 border border-rose-800/80">
+                                  npm error Lifecycle script `lint` failed with error code 1.<br />
+                                  Process completed with exit code 1.
+                                </div>
+                              </>
+                            ) : (
+                              <div className="text-emerald-400 pt-2 flex items-center gap-2 bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-800/50">
+                                <CheckCircle2 size={16} />
+                                <span>Linting completed successfully. Exit code: 0 [SUCCESS]</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* FAQs Accordion */}
                 <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-zinc-100">

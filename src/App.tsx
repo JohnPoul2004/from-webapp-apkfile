@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Mail,
   Lock,
@@ -70,7 +70,10 @@ import {
   ShoppingCart,
   Package,
   MousePointerClick,
-  CloudSun
+  CloudSun,
+  PlayCircle,
+  ChevronDown,
+  SlidersHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -121,6 +124,7 @@ import DeactivatedView from './components/DeactivatedView';
 import CommunityStandardsView from './components/CommunityStandardsView';
 import TVScheduleView from './components/TVScheduleView';
 import { WeatherSection } from './components/WeatherSection';
+import { CatchNowView } from './components/CatchNowView';
 import {
   handleFirestoreError,
   OperationType,
@@ -269,6 +273,24 @@ export default function App() {
     const saved = localStorage.getItem('theme');
     return saved ? saved === 'dark' : false;
   });
+
+  // Header Options Dropdown state
+  const [isHeaderOptionsOpen, setIsHeaderOptionsOpen] = useState(false);
+  const headerOptionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (headerOptionsRef.current && !headerOptionsRef.current.contains(event.target as Node)) {
+        setIsHeaderOptionsOpen(false);
+      }
+    };
+    if (isHeaderOptionsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isHeaderOptionsOpen]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -2314,6 +2336,7 @@ export default function App() {
     { id: 'Community Standards', label: 'Community Standards', icon: ShieldCheck },
     { id: 'TV Schedule', label: 'TV Schedule', icon: Tv },
     { id: 'Weather', label: 'Weather', icon: CloudSun },
+    { id: 'Catch Now', label: 'Catch Now', icon: PlayCircle },
     { id: 'Terms of Service', label: 'Terms of Service', icon: FileText },
     { id: 'Privacy Policy', label: 'Privacy Policy', icon: Shield },
   ];
@@ -2462,7 +2485,7 @@ export default function App() {
     }
 
     // Show tabs and buttons ONLY in Entertainment, Replay, Coding, News and other media categories
-    const showSubTabsAndButtons = !['Home', 'Pages', 'Events', 'Quota', 'Upgrade', 'Settings', 'Activity Log', 'Help', 'Terms of Service', 'Privacy Policy', 'Community Standards', 'TV Schedule', 'Weather'].includes(activeSection);
+    const showSubTabsAndButtons = !['Home', 'Pages', 'Events', 'Quota', 'Upgrade', 'Settings', 'Activity Log', 'Help', 'Terms of Service', 'Privacy Policy', 'Community Standards', 'TV Schedule', 'Weather', 'Catch Now'].includes(activeSection);
     const currentItemLabel = getItemLabel(activeSubTab);
 
     return (
@@ -2562,83 +2585,198 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* My Cart button */}
-              <button
-                type="button"
-                id="btn-header-my-cart"
-                onClick={() => setShowCartModal(true)}
-                className="relative inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 shadow-2xs active:scale-98 min-h-[36px]"
-                title="View My Shopping Cart"
-                aria-label="My Shopping Cart"
-              >
-                <ShoppingCart size={15} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
-                <span className="hidden sm:inline">My Cart</span>
-                {totalCartCount > 0 && (
-                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-black bg-rose-500 text-white rounded-full min-w-[18px] h-[18px] shadow-xs">
-                    {totalCartCount > 99 ? '99+' : totalCartCount}
-                  </span>
-                )}
-              </button>
+              {/* Header Options Dropdown Menu */}
+              <div className="relative" ref={headerOptionsRef}>
+                <button
+                  type="button"
+                  id="btn-header-options-dropdown"
+                  onClick={() => setIsHeaderOptionsOpen((prev) => !prev)}
+                  className={`relative inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border shadow-2xs active:scale-98 min-h-[38px] ${
+                    isHeaderOptionsOpen
+                      ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-zinc-900 dark:border-white shadow-sm'
+                      : 'bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700 border-zinc-200 dark:border-zinc-700'
+                  }`}
+                  title="Open Options Menu"
+                  aria-label="Options Menu"
+                >
+                  <SlidersHorizontal size={14} className="shrink-0" />
+                  <span>Options</span>
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-200 ${isHeaderOptionsOpen ? 'rotate-180' : ''}`}
+                  />
 
-              {/* My Orders button */}
-              <button
-                type="button"
-                id="btn-header-my-orders"
-                onClick={() => setShowOrdersModal(true)}
-                className="relative inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 shadow-2xs active:scale-98 min-h-[36px]"
-                title="View My Orders & History"
-                aria-label="My Orders"
-              >
-                <Package size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span className="hidden sm:inline">My Orders</span>
-                {ordersCount > 0 && (
-                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-black bg-emerald-600 text-white rounded-full min-w-[18px] h-[18px] shadow-xs">
-                    {ordersCount > 99 ? '99+' : ordersCount}
-                  </span>
-                )}
-              </button>
+                  {/* Notification / Alert / Cart Badge indicator on Options button */}
+                  {(totalCartCount > 0 || ordersCount > 0 || hasFirestorePermissionError) && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-rose-500 text-white text-[9px] font-black items-center justify-center">
+                        {totalCartCount > 0 ? (totalCartCount > 9 ? '9+' : totalCartCount) : '!'}
+                      </span>
+                    </span>
+                  )}
+                </button>
 
-              {/* Get Started Tour Button */}
-              <button
-                type="button"
-                id="btn-get-started-tour"
-                onClick={() => setIsTourOpen(true)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 dark:from-indigo-950/50 dark:to-blue-950/50 dark:hover:from-indigo-900/60 dark:hover:to-blue-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 shadow-2xs active:scale-98"
-                title="Open Get Started interactive tour"
-              >
-                <Compass size={14} className="text-indigo-600 dark:text-indigo-400" />
-                <span className="hidden sm:inline">Get Started Tour</span>
-                <span className="sm:hidden">Tour</span>
-              </button>
+                {/* Options Dropdown Panel */}
+                <AnimatePresence>
+                  {isHeaderOptionsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 6 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-64 sm:w-72 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 p-2 shadow-2xl z-50 text-xs flex flex-col gap-1 backdrop-blur-md"
+                    >
+                      <div className="px-3 py-2 border-b border-zinc-100 dark:border-zinc-800/80 mb-1 flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                          Header Options
+                        </span>
+                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Ready
+                        </span>
+                      </div>
 
-              {/* Theme mode toggle button */}
-              <button
-                type="button"
-                onClick={() => setIsDarkMode((prev) => !prev)}
-                className="p-1.5 rounded-xl text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center border border-zinc-200 dark:border-zinc-800"
-                title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {isDarkMode ? <Sun size={15} className="text-amber-500" /> : <Moon size={15} />}
-              </button>
+                      {/* 1. My Cart */}
+                      <button
+                        type="button"
+                        id="opt-my-cart"
+                        onClick={() => {
+                          setIsHeaderOptionsOpen(false);
+                          setShowCartModal(true);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                            <ShoppingCart size={15} />
+                          </div>
+                          <span className="font-semibold text-xs group-hover:text-zinc-950 dark:group-hover:text-white">
+                            My Cart
+                          </span>
+                        </div>
+                        {totalCartCount > 0 ? (
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full">
+                            {totalCartCount > 99 ? '99+' : totalCartCount} items
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-zinc-400">Empty</span>
+                        )}
+                      </button>
 
-              <button
-                type="button"
-                onClick={() => setShowRulesModal(true)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  hasFirestorePermissionError
-                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-900/50 hover:bg-amber-100'
-                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700'
-                }`}
-                title="View Rules & System Notifications"
-              >
-                <Bell size={13} className={hasFirestorePermissionError ? 'text-amber-600' : 'text-zinc-500'} />
-                <span className="hidden xs:inline">Notifications</span>
-              </button>
+                      {/* 2. My Orders */}
+                      <button
+                        type="button"
+                        id="opt-my-orders"
+                        onClick={() => {
+                          setIsHeaderOptionsOpen(false);
+                          setShowOrdersModal(true);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                            <Package size={15} />
+                          </div>
+                          <span className="font-semibold text-xs group-hover:text-zinc-950 dark:group-hover:text-white">
+                            My Orders
+                          </span>
+                        </div>
+                        {ordersCount > 0 ? (
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded-full">
+                            {ordersCount} {ordersCount === 1 ? 'order' : 'orders'}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-zinc-400">0 orders</span>
+                        )}
+                      </button>
 
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/30 shrink-0">
-                <ShieldCheck size={14} className="shrink-0" />
-                <span className="hidden sm:inline">Authenticated</span>
-              </span>
+                      {/* 3. Tour */}
+                      <button
+                        type="button"
+                        id="opt-get-started-tour"
+                        onClick={() => {
+                          setIsHeaderOptionsOpen(false);
+                          setIsTourOpen(true);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                            <Compass size={15} />
+                          </div>
+                          <span className="font-semibold text-xs group-hover:text-zinc-950 dark:group-hover:text-white">
+                            Get Started Tour
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">Interactive</span>
+                      </button>
+
+                      {/* 4. Dark Mode */}
+                      <button
+                        type="button"
+                        id="opt-toggle-theme"
+                        onClick={() => {
+                          setIsDarkMode((prev) => !prev);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center">
+                            {isDarkMode ? <Sun size={15} className="text-amber-500" /> : <Moon size={15} className="text-zinc-700 dark:text-zinc-300" />}
+                          </div>
+                          <span className="font-semibold text-xs group-hover:text-zinc-950 dark:group-hover:text-white">
+                            Dark Mode
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-zinc-400">
+                            {isDarkMode ? 'Enabled' : 'Disabled'}
+                          </span>
+                          <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors ${isDarkMode ? 'bg-amber-500' : 'bg-zinc-300 dark:bg-zinc-700'}`}>
+                            <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${isDarkMode ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* 5. Notifications */}
+                      <button
+                        type="button"
+                        id="opt-notifications"
+                        onClick={() => {
+                          setIsHeaderOptionsOpen(false);
+                          setShowRulesModal(true);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors cursor-pointer group ${
+                          hasFirestorePermissionError
+                            ? 'bg-amber-50/80 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+                            : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                            hasFirestorePermissionError
+                              ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400'
+                              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                          }`}>
+                            <Bell size={15} className={hasFirestorePermissionError ? 'text-amber-600' : ''} />
+                          </div>
+                          <span className="font-semibold text-xs group-hover:text-zinc-950 dark:group-hover:text-white">
+                            Notifications & Rules
+                          </span>
+                        </div>
+                        {hasFirestorePermissionError ? (
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full">
+                            Action Req.
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-zinc-400">All Good</span>
+                        )}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </header>
 
@@ -4156,6 +4294,12 @@ export default function App() {
                 )}
                 {activeSection === 'Weather' && (
                   <WeatherSection />
+                )}
+                {activeSection === 'Catch Now' && (
+                  <CatchNowView
+                    currentUser={currentUser}
+                    currentUserProfile={currentUserProfile}
+                  />
                 )}
                 {activeSection === 'Terms of Service' && (
                   <div className="max-w-3xl mx-auto space-y-6 py-6">

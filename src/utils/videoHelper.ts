@@ -6,7 +6,7 @@
 export function extractYouTubeId(url?: string): string | null {
   if (!url) return null;
   const match = url.match(
-    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/
+    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([\w-]{11})/
   );
   return match ? match[1] : null;
 }
@@ -17,14 +17,39 @@ export function extractVimeoId(url?: string): string | null {
   return match ? match[1] : null;
 }
 
+export function extractDailymotionId(url?: string): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:dailymotion\.com\/(?:video|hub)\/|dai\.ly\/)([a-zA-Z0-9]+)/);
+  return match ? match[1] : null;
+}
+
 export function getVideoThumbnail(videoUrl?: string, coverPhoto?: string): string | null {
-  if (coverPhoto && coverPhoto.trim().length > 0) {
+  if (coverPhoto && typeof coverPhoto === 'string' && coverPhoto.trim().length > 0) {
     return coverPhoto.trim();
   }
 
-  const ytId = extractYouTubeId(videoUrl);
+  if (!videoUrl || typeof videoUrl !== 'string') return null;
+
+  const trimmed = videoUrl.trim();
+
+  // If the videoUrl itself is an image URL
+  if (/\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(trimmed) || trimmed.startsWith('data:image/')) {
+    return trimmed;
+  }
+
+  const ytId = extractYouTubeId(trimmed);
   if (ytId) {
     return `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+  }
+
+  const vimeoId = extractVimeoId(trimmed);
+  if (vimeoId) {
+    return `https://vumbnail.com/${vimeoId}.jpg`;
+  }
+
+  const dmId = extractDailymotionId(trimmed);
+  if (dmId) {
+    return `https://www.dailymotion.com/thumbnail/video/${dmId}`;
   }
 
   return null;

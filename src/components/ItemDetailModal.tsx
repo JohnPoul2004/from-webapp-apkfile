@@ -692,17 +692,34 @@ export default function ItemDetailModal({
 
           {/* Cover Photo (Showbiz News, Photos, Polls, Quiz, Products) */}
           {subTab !== 'Videos' && subTab !== 'Shorts' && (
-            <div className={`rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-100 w-full ${subTab === 'Products' ? 'aspect-square max-h-96' : 'max-h-72'}`}>
+            <div className={`rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 w-full ${subTab === 'Products' ? 'aspect-square max-h-96' : 'max-h-72'}`}>
               <img
                 src={
-                  item.photo ||
                   item.coverPhoto ||
+                  item.photo ||
                   item.photoUrl ||
+                  item.thumbnail ||
+                  item.thumbnailUrl ||
+                  item.mediaUrl ||
+                  item.image ||
+                  item.imageUrl ||
                   (Array.isArray(item.photos) && item.photos[0]) ||
                   'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&auto=format&fit=crop&q=60'
                 }
                 alt={item.title || 'Cover'}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    subTab === 'Showbiz News'
+                      ? 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&auto=format&fit=crop&q=60'
+                      : subTab === 'Photos'
+                      ? 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&auto=format&fit=crop&q=60'
+                      : subTab === 'Products'
+                      ? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=60'
+                      : subTab === 'Polls'
+                      ? 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=800&auto=format&fit=crop&q=60'
+                      : 'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=800&auto=format&fit=crop&q=60';
+                }}
               />
             </div>
           )}
