@@ -22,7 +22,8 @@ import {
   Send,
   Save,
   Bell,
-  BellRing
+  BellRing,
+  Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -152,6 +153,7 @@ export function CatchNowView({ currentUser, currentUserProfile }: CatchNowViewPr
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedDescription, setCopiedDescription] = useState(false);
 
   const composerRef = useRef<HTMLDivElement>(null);
 
@@ -377,6 +379,51 @@ export function CatchNowView({ currentUser, currentUserProfile }: CatchNowViewPr
       setFormError(null);
       setFormDate(val);
     }
+  };
+
+  const handlePreview = () => {
+    const cleanOptions: CatchNowOption[] = formOptions.map((opt, idx) => ({
+      id: opt.id || `preview-opt-${idx + 1}`,
+      optionNumber: opt.optionNumber || idx + 1,
+      title: opt.title.trim() || `Option ${opt.optionNumber || idx + 1}`,
+      description: opt.description.trim() || 'No description provided yet.',
+      gongManEnabled: Boolean(opt.gongManEnabled)
+    }));
+
+    const previewItem: CatchNowItem = {
+      id: editingItem?.id || 'preview-draft',
+      userId: currentUser?.uid,
+      authorName: currentUserProfile?.fullName || currentUser?.displayName || 'Creator',
+      authorEmail: currentUser?.email || undefined,
+      title: formTitle.trim() || 'Untitled Catch Now Story',
+      story: formStory.trim() || 'Story alternate content will appear here.',
+      date: formDate || todayDateStr,
+      time: formTime,
+      category: formCategory || 'Exclusive Story',
+      coverPhoto: editingItem?.coverPhoto || formCoverPhoto,
+      options: cleanOptions,
+      likes: editingItem?.likes || 0,
+      updatedAt: new Date().toISOString()
+    };
+
+    setViewingStoryItem(previewItem);
+  };
+
+  const handleCopyDescription = (item: CatchNowItem) => {
+    const options = normalizeOptions(item);
+    let text = `Title: ${item.title}\n\nStory Alternate:\n${item.story}\n\nDate: ${formatDateDisplay(item.date)}`;
+    if (options.length > 0) {
+      const formattedOptions = options
+        .map(
+          (opt) =>
+            `Option ${opt.optionNumber}${opt.gongManEnabled ? ' (GongMan)' : ''}: ${opt.title}\n${opt.description}`
+        )
+        .join('\n\n');
+      text += `\n\nOptions:\n${formattedOptions}`;
+    }
+    navigator.clipboard.writeText(text);
+    setCopiedDescription(true);
+    setTimeout(() => setCopiedDescription(false), 2000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -804,6 +851,16 @@ export function CatchNowView({ currentUser, currentUserProfile }: CatchNowViewPr
               Clear
             </button>
             <button
+              type="button"
+              id="btn-preview-catch-now"
+              onClick={handlePreview}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-bold transition-all border border-zinc-200 dark:border-zinc-700 cursor-pointer active:scale-98"
+              title="Preview Story & Options"
+            >
+              <Eye size={14} className="text-amber-500" />
+              <span>Preview</span>
+            </button>
+            <button
               type="submit"
               id="btn-save-catch-now"
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black transition-all shadow-md active:scale-98 cursor-pointer"
@@ -825,106 +882,125 @@ export function CatchNowView({ currentUser, currentUserProfile }: CatchNowViewPr
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden my-8"
             >
-              <div className="relative aspect-video w-full overflow-hidden bg-zinc-950">
-                <img
-                  src={viewingStoryItem.coverPhoto || PRESET_COVERS[0].url}
-                  alt={viewingStoryItem.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent" />
+              {/* Modal Top Close Action */}
+              <div className="flex items-center justify-end px-6 sm:px-8 pt-6 pb-1">
                 <button
                   type="button"
                   onClick={() => setViewingStoryItem(null)}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition-colors cursor-pointer"
+                  className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors cursor-pointer"
+                  title="Close preview"
                 >
                   <X size={16} />
                 </button>
-                <div className="absolute bottom-4 left-4 right-4 space-y-1 text-white">
-                  <span className="px-2.5 py-1 rounded-full bg-amber-500 text-zinc-950 text-[10px] font-black uppercase tracking-wider">
-                    {viewingStoryItem.category || 'Catch Now'}
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-black">{viewingStoryItem.title}</h2>
-                </div>
               </div>
 
-              <div className="p-6 space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-zinc-100 dark:border-zinc-800 text-xs text-zinc-500 dark:text-zinc-400">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-zinc-900 dark:text-zinc-100">
-                      By {viewingStoryItem.authorName || 'Creator'}
-                    </span>
-                    <span>&bull;</span>
-                    <span className="flex items-center gap-1">
-                      <Calendar size={13} className="text-amber-500" />
-                      <span>{formatDateDisplay(viewingStoryItem.date)}</span>
-                    </span>
-                  </div>
-                  {viewingStoryItem.time && (
-                    <span className="flex items-center gap-1 font-mono text-[11px]">
-                      <Clock size={13} />
-                      <span>{viewingStoryItem.time}</span>
-                    </span>
-                  )}
-                </div>
-
-                {/* Full Story Paragraphs */}
-                <div className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line space-y-4">
-                  {viewingStoryItem.story}
-                </div>
-
-                {/* Options Section inside Story Reader */}
-                {normalizeOptions(viewingStoryItem).length > 0 && (
-                  <div className="space-y-3 pt-2">
-                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                      <ListOrdered size={15} />
-                      <span>Options ({normalizeOptions(viewingStoryItem).length})</span>
+              <div className="p-6 sm:p-8 pt-2 space-y-6">
+                {/* Description Container containing Title, Story Alternate, and Options */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                      <Sparkles size={14} />
+                      <span>Description</span>
                     </div>
 
-                    <div className="space-y-2.5">
-                      {normalizeOptions(viewingStoryItem).map((opt) => (
-                        <div
-                          key={opt.id || `${opt.optionNumber}-${opt.title}`}
-                          className="p-4 rounded-2xl bg-amber-50/60 dark:bg-zinc-800/70 border border-amber-200/70 dark:border-zinc-700/70 space-y-1.5"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="px-2.5 py-0.5 rounded-md bg-amber-500 text-zinc-950 font-black text-xs font-mono shadow-xs">
-                                Option {opt.optionNumber}{opt.gongManEnabled ? ' (GongMan)' : ''}
-                              </span>
-                              <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                                {opt.title}
-                              </h4>
-                            </div>
-                            {opt.gongManEnabled && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500 text-zinc-950 font-black text-[10px] tracking-wide shadow-2xs">
-                                <BellRing size={11} />
-                                <span>GongMan</span>
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed pl-1">
-                            {opt.description}
-                          </p>
+                    <button
+                      type="button"
+                      id="btn-copy-description"
+                      onClick={() => handleCopyDescription(viewingStoryItem)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-amber-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-amber-800 dark:hover:text-amber-400 text-xs font-bold transition-all cursor-pointer shadow-2xs border border-zinc-200/80 dark:border-zinc-700/80 active:scale-95"
+                      title="Copy full description content to clipboard"
+                    >
+                      {copiedDescription ? (
+                        <>
+                          <Check size={13} className="text-emerald-500 stroke-[2.5]" />
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="p-5 sm:p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/90 dark:border-zinc-700/80 space-y-5 shadow-sm">
+                    {/* 1. Title */}
+                    <div className="space-y-1 pb-4 border-b border-zinc-200/70 dark:border-zinc-700/70">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500 block">
+                        Title
+                      </span>
+                      <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 font-sans leading-snug">
+                        {viewingStoryItem.title}
+                      </h2>
+                    </div>
+
+                    {/* 2. Story Alternate */}
+                    <div className="space-y-1.5 pb-4 border-b border-zinc-200/70 dark:border-zinc-700/70">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500 block">
+                        Story Alternate
+                      </span>
+                      <div className="text-sm sm:text-base text-zinc-800 dark:text-zinc-200 font-sans font-medium leading-relaxed whitespace-pre-line">
+                        {viewingStoryItem.story}
+                      </div>
+                    </div>
+
+                    {/* 3. Date */}
+                    <div className="space-y-1.5 pb-4 border-b border-zinc-200/70 dark:border-zinc-700/70">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500 block">
+                        Date
+                      </span>
+                      <div className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/50 text-xs font-bold text-amber-900 dark:text-amber-200">
+                        <span>{formatDateDisplay(viewingStoryItem.date)}</span>
+                      </div>
+                    </div>
+
+                    {/* 4. Options {number} */}
+                    {normalizeOptions(viewingStoryItem).length > 0 && (
+                      <div className="space-y-3 pt-1">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                          <ListOrdered size={13} />
+                          <span>Options ({normalizeOptions(viewingStoryItem).length})</span>
                         </div>
-                      ))}
-                    </div>
+
+                        <div className="space-y-3">
+                          {normalizeOptions(viewingStoryItem).map((opt) => (
+                            <div
+                              key={opt.id || `${opt.optionNumber}-${opt.title}`}
+                              className="p-4 rounded-2xl bg-white dark:bg-zinc-900/90 border border-amber-200/80 dark:border-zinc-700/80 space-y-2 shadow-2xs"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="px-2.5 py-0.5 rounded-lg bg-amber-500 text-zinc-950 font-black text-xs font-mono shadow-2xs">
+                                    Option {opt.optionNumber}{opt.gongManEnabled ? ' (GongMan)' : ''}
+                                  </span>
+                                  <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 font-sans tracking-tight">
+                                    {opt.title}
+                                  </h4>
+                                </div>
+                                {opt.gongManEnabled && (
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500 text-zinc-950 font-black text-[10px] tracking-wide shadow-2xs">
+                                    <BellRing size={11} className="animate-pulse" />
+                                    <span>GongMan Active</span>
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 font-normal leading-relaxed pl-1 pt-0.5">
+                                {opt.description}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                  <button
-                    type="button"
-                    onClick={() => handleLike(viewingStoryItem.id)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 transition-colors text-xs font-bold cursor-pointer"
-                  >
-                    <Heart size={15} className={(viewingStoryItem.likes || 0) > 0 ? 'fill-rose-500 text-rose-500' : ''} />
-                    <span>{viewingStoryItem.likes || 0} Likes</span>
-                  </button>
-
+                <div className="flex items-center justify-end pt-4 border-t border-zinc-100 dark:border-zinc-800">
                   <button
                     type="button"
                     onClick={() => setViewingStoryItem(null)}
-                    className="px-5 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer shadow-xs active:scale-98"
                   >
                     Close Story
                   </button>
